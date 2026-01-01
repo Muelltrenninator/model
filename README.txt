@@ -1,1 +1,0 @@
-An image classification AI model intended for classifying trash
