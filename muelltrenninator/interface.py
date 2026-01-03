@@ -1,7 +1,7 @@
 import gradio as gr 
 import os
 
-from train_model import load_model, evalute_input
+from model_functions import load_model, evalute_input
 from model_architecture import neural_network
 
 
@@ -11,6 +11,7 @@ def predict(input):
 
 
     return predicted
+
 
 demo = gr.Interface(
     fn= predict,

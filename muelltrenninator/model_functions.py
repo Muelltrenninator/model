@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 from model_architecture import neural_network
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
+from collections import OrderedDict
 
 transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -76,9 +77,7 @@ def train(dataloader : DataLoader, model : neural_network, loss_fn , optimizer) 
             optimizer.step()
 
             running_loss += loss.item()
-            np_arr = outputs.detach().cpu().numpy()
-            _, predicted = torch.max(outputs.data, 1)
-            print(f"[+]  Output: {np_arr}")
+            print(f"[+]  Output: {outputs}")
             if i % 2000 == 1999:
             
                 print(f"[i] [{epoch +1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}")
@@ -125,7 +124,7 @@ def load_model(model_path : str) -> neural_network:
     return loaded_model
 
 
-def evalute_input(model : neural_network, image_path : str, image_transforms : transforms = transform) -> str:
+def evalute_input(model : neural_network, image_path : str, image_transforms : transforms = transform) -> dict:
     """
     Passes the image to the model
 
@@ -142,8 +141,8 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     
     Returns
     -------
-    string
-        The predicted class name
+    OrderedDict
+        A dictionary sorted descending by probability with pairs of Class probability
     """
 
     model = model.eval()
@@ -152,7 +151,17 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     image = image.unsqueeze(0)
 
     output = model(image)
-    
-    _, predicted = torch.max(output.data, 1)
+    print(output)
+    probabilities = F.softmax(output, dim = 1)[0]
+    print(probabilities)
 
-    return classes[predicted.item()]
+    class_prob_pairs = {}
+
+    for i in range(len(classes)):
+        class_prob_pairs[classes[i]] = probabilities[i].item()
+
+    sorted_class_prob_pairs = OrderedDict(sorted(class_prob_pairs.items(), key = lambda x: x[1], reverse = True))
+    print(class_prob_pairs)
+    print(sorted_class_prob_pairs)
+
+    return sorted_class_prob_pairs
