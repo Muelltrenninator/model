@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import torchvision
+import json
 import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
@@ -141,8 +142,8 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     
     Returns
     -------
-    OrderedDict
-        A dictionary sorted descending by probability with pairs of Class probability
+    JSON string
+        The class : probability dictionary sorted descending by probability.
     """
 
     model = model.eval()
@@ -163,5 +164,6 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     sorted_class_prob_pairs = OrderedDict(sorted(class_prob_pairs.items(), key = lambda x: x[1], reverse = True))
     print(class_prob_pairs)
     print(sorted_class_prob_pairs)
+    json_string = json.dumps(sorted_class_prob_pairs, indent = 4)
 
-    return sorted_class_prob_pairs
+    return json_string
