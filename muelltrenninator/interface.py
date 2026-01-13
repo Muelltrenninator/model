@@ -6,7 +6,7 @@ from model_architecture import neural_network
 
 
 def predict(input):
-    curr_model = load_model(os.path.dirname(os.path.realpath(__file__))+ "/trained_models/model.pth")
+    curr_model = load_model(os.path.dirname(os.path.realpath(__file__))+ "/trained_models/model_93%.pth")
     predicted = evalute_input(curr_model,input)
 
 

@@ -1,5 +1,4 @@
 import os
-import sys
 import torch
 import torchvision
 import json
@@ -8,13 +7,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import PIL.Image as Image
 import numpy as np
+import datetime
+import matplotlib.pyplot as plt
 
 from torchvision import datasets, transforms
-from matplotlib import pyplot as plt
 from model_architecture import neural_network
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from collections import OrderedDict
+from torch.utils.tensorboard import SummaryWriter
+
 
 transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -26,23 +28,17 @@ transform = transforms.Compose([
     ])
 
 classes = ("bio", "elektroschrott", "gelber_sack","papier", "restmuell")
+device       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
+
 
 def get_current_versions():
-    pass    # Optional mal sehen obs gebraucht wird 
+    pass    # Optional
 
 
-model        = neural_network(5)
-img_dir      = os.path.dirname(os.path.realpath(__file__)) + "/data/"
-criterion    = nn.CrossEntropyLoss()
-optimizer    = optim.Adam(model.parameters(), lr = 0.001)
-data         = datasets.ImageFolder(root = img_dir, transform = transform, allow_empty = True)
-train_loader = DataLoader(data, batch_size = 4, shuffle = True, drop_last = True )
-classes      = ("bio", "elektroschrott", "gelber_sack","papier", "restmuell")
-device       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
 
 
-def train(dataloader : DataLoader, model : neural_network, loss_fn , optimizer) -> neural_network:
+def train(train_loader : DataLoader, model : neural_network, num_epochs : int, loss_fn , optimizer, val_loader : DataLoader = None) -> neural_network:
     """
     Trains the given model.
 
@@ -60,6 +56,10 @@ def train(dataloader : DataLoader, model : neural_network, loss_fn , optimizer) 
     optimizer :
         The optimizer used during training
     
+    val_loader : DataLoader, optional
+
+
+    
     Returns
     -------
 
@@ -67,23 +67,44 @@ def train(dataloader : DataLoader, model : neural_network, loss_fn , optimizer) 
         the trained model
     """
 
-    for epoch in range(2):
-        running_loss = 0.0
+    timestamp =  datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = os.path.dirname(os.path.realpath(__file__)) + "/logs/"
+    writer = SummaryWriter(log_dir + timestamp)
+    train_losses = []
+    model.train()
 
-        for i, data in enumerate(dataloader, 0):
+    for epoch in range(num_epochs):
+
+        running_loss = 0.0
+        correct = 0
+        total = 0
+
+
+        for i, data in enumerate(train_loader, 0):
+            optimizer.zero_grad()
             inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             outputs = model(inputs)
+            outputs.to(device)
             loss    = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
-
-            running_loss += loss.item()
-            print(f"[+]  Output: {outputs}")
-            if i % 2000 == 1999:
+            running_loss += loss.item() * train_loader.batch_size
+            _, predicted = outputs.max(1)
+            total += labels.size(0)
+            correct += predicted.eq(labels).sum().item()
             
-                print(f"[i] [{epoch +1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}")
+        writer.add_image("Test", inputs[0])
+        print(f"[+] epoch_loss: {running_loss/ total:.4f} epoch_acc : {100. * correct/ total:.4f}")
+        writer.add_scalar("Loss / train", running_loss/ total, epoch)
+        writer.add_scalar("Accuracy / train", correct / total, epoch)
+    # TODO implement val_loader if needed
     
     print("[+] Finished Training")
+    writer.flush()
+    print(f"[+] Created tensorboard summary at {SummaryWriter.get_logdir(writer)}")
+    writer.close()
     return model
 
 
@@ -143,17 +164,18 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     Returns
     -------
     JSON string
-        The class : probability dictionary sorted descending by probability.
+        A class : probability dictionary sorted descending by probability
     """
-
+    
     model = model.eval()
     image = Image.open(image_path)
     image = image_transforms(image).float()
     image = image.unsqueeze(0)
 
-    output = model(image)
+    output = model(image.to(device))
+    output = output.to(device)
     print(output)
-    probabilities = F.softmax(output, dim = 1)[0]
+    probabilities = F.softmax(output, dim = 1)[0].to(device)
     print(probabilities)
 
     class_prob_pairs = {}
@@ -164,6 +186,7 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     sorted_class_prob_pairs = OrderedDict(sorted(class_prob_pairs.items(), key = lambda x: x[1], reverse = True))
     print(class_prob_pairs)
     print(sorted_class_prob_pairs)
+
     json_string = json.dumps(sorted_class_prob_pairs, indent = 4)
 
     return json_string
