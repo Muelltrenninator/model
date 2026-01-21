@@ -12,18 +12,19 @@ import matplotlib.pyplot as plt
 
 from torchvision import datasets, transforms
 from model_architecture import neural_network
+from trash_classifier import trash_pre_detector
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from collections import OrderedDict
 from torch.utils.tensorboard import SummaryWriter
 
 
-transform = transforms.Compose([
+val_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(
-            mean=[0.5, 0.5, 0.5],
-            std=[0.5, 0.5, 0.5]
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]
     )
     ])
 
@@ -38,7 +39,7 @@ def get_current_versions():
 
 
 
-def train(train_loader : DataLoader, model : neural_network, num_epochs : int, loss_fn , optimizer, val_loader : DataLoader = None) -> neural_network:
+def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neural_network, num_epochs : int, loss_fn , optimizer ) -> neural_network:
     """
     Trains the given model.
 
@@ -58,8 +59,6 @@ def train(train_loader : DataLoader, model : neural_network, num_epochs : int, l
     
     val_loader : DataLoader, optional
 
-
-    
     Returns
     -------
 
@@ -71,35 +70,91 @@ def train(train_loader : DataLoader, model : neural_network, num_epochs : int, l
     log_dir = os.path.dirname(os.path.realpath(__file__)) + "/logs/"
     writer = SummaryWriter(log_dir + timestamp)
     train_losses = []
+    patience = 7
+    epochs_no_improve = 0
+    best_val_loss = float("inf")
+    min_improve = 1e-3
+
+
     model.train()
 
     for epoch in range(num_epochs):
 
-        running_loss = 0.0
-        correct = 0
-        total = 0
-
+# --- Training Phase --- #
+        train_loss = 0.0
+        train_correct = 0
+        train_total = 0
 
         for i, data in enumerate(train_loader, 0):
+
             optimizer.zero_grad()
             inputs, labels = data
             inputs = inputs.to(device)
             labels = labels.to(device)
+
             outputs = model(inputs)
-            outputs.to(device)
+
             loss    = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
-            running_loss += loss.item() * train_loader.batch_size
-            _, predicted = outputs.max(1)
-            total += labels.size(0)
-            correct += predicted.eq(labels).sum().item()
-            
-        writer.add_image("Test", inputs[0])
-        print(f"[+] epoch_loss: {running_loss/ total:.4f} epoch_acc : {100. * correct/ total:.4f}")
-        writer.add_scalar("Loss / train", running_loss/ total, epoch)
-        writer.add_scalar("Accuracy / train", correct / total, epoch)
-    # TODO implement val_loader if needed
+
+            _, predicted_train = outputs.max(1)
+            train_loss += loss.item() * labels.size(0)
+            train_total += labels.size(0)
+            train_correct += predicted_train.eq(labels).sum().item() # comparison sums up true values transform 1d tensor to number with item()
+            writer.add_image("Examples train", inputs[0])
+
+
+
+# --- Validation Phase --- #
+        model.eval()
+        val_loss = 0
+        val_correct = 0
+        val_total = 0
+        
+        with torch.no_grad():
+
+            for i, data in enumerate(val_loader, 0 ):
+                inputs, labels = data
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                outputs = model(inputs)
+                
+                loss = loss_fn(outputs, labels)
+                
+                _, predicted_val = outputs.max(1)
+                val_loss += loss.item() * labels.size(0)
+                val_total += labels.size(0)
+                val_correct += predicted_val.eq(labels).sum().item()
+                writer.add_image("Examples val", inputs[0])
+
+        print(f"[+] epoch_train_loss: {train_loss/ train_total:.4f} epoch_train_acc : {100. * train_correct/ train_total:.4f}")
+        print(f"[+] epoch_val_loss: {val_loss/ val_total:.4f} epoch_val_acc : {100. * val_correct/ val_total:.4}")
+        writer.add_scalar("Loss / val", val_loss / val_total, epoch)
+        writer.add_scalar("Accuracy / val", val_correct / val_total, epoch)
+
+        
+        writer.add_scalar("Loss / train", train_loss/ train_total, epoch)
+        writer.add_scalar("Accuracy / train", train_correct / train_total, epoch)
+
+
+        if val_loss < best_val_loss - min_improve: # Early Stopping
+            best_val_loss = val_loss
+            epochs_no_improve = 0
+    
+        else:
+            epochs_no_improve += 1
+    
+        if epochs_no_improve >= patience:
+            print("[+] Finished Training")
+            writer.flush()
+            print(f"[+] Created tensorboard summary at {SummaryWriter.get_logdir(writer)}")
+            writer.close()
+            return model
+        
+
+
     
     print("[+] Finished Training")
     writer.flush()
@@ -146,7 +201,7 @@ def load_model(model_path : str) -> neural_network:
     return loaded_model
 
 
-def evalute_input(model : neural_network, image_path : str, image_transforms : transforms = transform) -> dict:
+def evalute_input(model : neural_network, image_path : str, image_transforms : transforms = val_transform, model_small : trash_pre_detector = None) -> dict:
     """
     Passes the image to the model
 
@@ -161,21 +216,31 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     image_transforms : transforms, optional
         Transformations that are applied before evaluating
     
+    model_small : trash_pre_detector, optional
+    
     Returns
     -------
     JSON string
-        A class : probability dictionary sorted descending by probability
+        A class : probability dictionary sorted descending by probability the last item is a bool value based on the model_small
     """
-    
+
     model = model.eval()
     image = Image.open(image_path)
     image = image_transforms(image).float()
     image = image.unsqueeze(0)
 
+    if (model_small != None):
+        model_small = model_small.eval()
+        output_small = model_small(image.to(device))
+        _, predicted_small = output_small.max(1)
+        print(output_small)
+
+
     output = model(image.to(device))
     output = output.to(device)
     print(output)
-    probabilities = F.softmax(output, dim = 1)[0].to(device)
+    probabilities = F.softmax(output, dim = 1)[0]
+    probabilities = probabilities.to(device)
     print(probabilities)
 
     class_prob_pairs = {}
@@ -183,10 +248,17 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     for i in range(len(classes)):
         class_prob_pairs[classes[i]] = probabilities[i].item()
 
-    sorted_class_prob_pairs = OrderedDict(sorted(class_prob_pairs.items(), key = lambda x: x[1], reverse = True))
+    sorted_class_prob_pairs = OrderedDict(sorted(class_prob_pairs.items(), key = lambda x: x[1], reverse = True)) # Sort dictionary descending by value
     print(class_prob_pairs)
     print(sorted_class_prob_pairs)
 
     json_string = json.dumps(sorted_class_prob_pairs, indent = 4)
+    json_string_expanded = json.loads(json_string)
+    json_string_expanded.update({"is_trash" : True})
+        
+    if(model_small != None and predicted_small == 1):
+        json_string_expanded.update({"is_trash" : False})
 
-    return json_string
+    print(json_string_expanded)
+
+    return json_string_expanded

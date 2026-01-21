@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn           # parent object for pytorch model
-import torch.nn.functional as F # activation function for model
+import torch.nn as nn 
+import torch.nn.functional as F 
 import os
 import torch.optim as optim
 
@@ -47,23 +47,13 @@ class neural_network(nn.Module):
             nn.Conv2d(in_channels = 128, out_channels = 256, kernel_size = 3, stride = 1, padding = 1),
             nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.MaxPool2d(2)
+            nn.AdaptiveAvgPool2d((1,1))
         )
         
         # Layer 5
         self.layers_combine = nn.Sequential(
 
             nn.Flatten(),
-            nn.Linear(50176, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-
             nn.Linear(256, 128),
             nn.BatchNorm1d(128),
             nn.ReLU(),
