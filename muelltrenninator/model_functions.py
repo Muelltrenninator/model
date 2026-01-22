@@ -32,6 +32,19 @@ classes = ("bio", "elektroschrott", "gelber_sack","papier", "restmuell")
 device       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = "cpu"
 
+def calculate_class_weights(data_dir : str, datapoints : int, num_classes : int):
+    pass
+    # TODO Klassengewichtung einrichten für Trainieren von Model
+        
+
+
+
+
+
+
+
+
+
 
 def get_current_versions():
     pass    # Optional
@@ -235,7 +248,6 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
         _, predicted_small = output_small.max(1)
         print(output_small)
 
-
     output = model(image.to(device))
     output = output.to(device)
     print(output)
@@ -244,7 +256,7 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     print(probabilities)
 
     class_prob_pairs = {}
-
+    i = 0
     for i in range(len(classes)):
         class_prob_pairs[classes[i]] = probabilities[i].item()
 
@@ -252,13 +264,12 @@ def evalute_input(model : neural_network, image_path : str, image_transforms : t
     print(class_prob_pairs)
     print(sorted_class_prob_pairs)
 
-    json_string = json.dumps(sorted_class_prob_pairs, indent = 4)
-    json_string_expanded = json.loads(json_string)
-    json_string_expanded.update({"is_trash" : True})
-        
     if(model_small != None and predicted_small == 1):
-        json_string_expanded.update({"is_trash" : False})
+        sorted_class_prob_pairs["is_trash"] = False
+    
+    else:
+        sorted_class_prob_pairs["is_trash"] = True
+    
+    json_string = json.dumps(sorted_class_prob_pairs, indent = 4)
 
-    print(json_string_expanded)
-
-    return json_string_expanded
+    return json_string

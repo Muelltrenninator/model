@@ -38,7 +38,7 @@ def main():
     model         = neural_network(5)
 
     img_dir_large = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying/"
-    criterion     = nn.CrossEntropyLoss()
+    
     optimizer     = optim.Adam(model.parameters(), lr = 0.001)
 
     data_large    = datasets.ImageFolder(root = img_dir_large, transform = train_transforms, allow_empty = True)
@@ -50,7 +50,10 @@ def main():
     device = "cpu"
     model.to(device)
 
-    print(str(train_data_large))
+    criterion     = nn.CrossEntropyLoss()
+
+    print(data_large.imgs)
+    print(len(train_loader_large))
     print(str(train_loader_large))
     print(device)
     val_loader_large = DataLoader(dataset = train_data_large, batch_size = 32, shuffle = False)
