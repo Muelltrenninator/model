@@ -3,3 +3,4 @@ torchvision>=0.10.0
 matplotlib>=3.4.0
 gradio>=6.0.2
 tensorboard>=2.20.0
+scikit-learn>=1.8.0

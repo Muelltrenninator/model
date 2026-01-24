@@ -47,14 +47,14 @@ class neural_network(nn.Module):
             nn.Conv2d(in_channels = 128, out_channels = 256, kernel_size = 3, stride = 1, padding = 1),
             nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.AdaptiveAvgPool2d((1,1))
+            nn.AdaptiveAvgPool2d((2,2))
         )
         
         # Layer 5
         self.layers_combine = nn.Sequential(
 
             nn.Flatten(),
-            nn.Linear(256, 128),
+            nn.Linear(1024, 128),
             nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Dropout(0.2),

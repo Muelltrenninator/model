@@ -17,7 +17,8 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from collections import OrderedDict
 from torch.utils.tensorboard import SummaryWriter
-
+from collections import Counter
+from sklearn.utils.class_weight import compute_class_weight
 
 val_transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -32,15 +33,20 @@ classes = ("bio", "elektroschrott", "gelber_sack","papier", "restmuell")
 device       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = "cpu"
 
-def calculate_class_weights(data_dir : str, datapoints : int, num_classes : int):
-    pass
-    # TODO Klassengewichtung einrichten für Trainieren von Model
-        
+def calculate_class_weights(dataloader : DataLoader):
+    
+    counter = Counter()
+    y = []
+    for _, labels in dataloader:
+        counter.update(labels.tolist())
 
+    for class_label, count in counter.items():
+        y.extend([class_label] * count)
+    
+    class_weights = compute_class_weight(class_weight = "balanced", classes = np.unique(y), y = y)
+    print(f"Class Weights: {class_weights}")
 
-
-
-
+    return class_weights
 
 
 

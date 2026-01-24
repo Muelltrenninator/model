@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, Dataset
 from model_architecture import neural_network
-from model_functions import train_model, save_model, load_model
+from model_functions import train_model, save_model, load_model, calculate_class_weights
 
 
 def main():
@@ -32,8 +32,6 @@ def main():
             std=[0.229, 0.224, 0.225]
     )
     ])
-
-
 
     model         = neural_network(5)
 
@@ -56,9 +54,11 @@ def main():
     print(len(train_loader_large))
     print(str(train_loader_large))
     print(device)
-    val_loader_large = DataLoader(dataset = train_data_large, batch_size = 32, shuffle = False)
 
+    val_loader_large = DataLoader(dataset = train_data_large, batch_size = 32, shuffle = False)
+    weights = calculate_class_weights(train_loader_large)
     train_model(train_loader = train_loader_large, val_loader = val_loader_large,  model = model, num_epochs = 1000 ,loss_fn = criterion, optimizer = optimizer)
+    criterion     = nn.CrossEntropyLoss(weight = torch.FloatTensor(weights))
     
 
     save_model(model, os.path.dirname(os.path.realpath(__file__)) +"/trained_models_large/model_latest.pth")
