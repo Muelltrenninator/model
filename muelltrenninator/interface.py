@@ -20,7 +20,7 @@ curr_model_large.fc = nn.Sequential(
                 nn.Linear(512, 5)
 )
 curr_model_large.load_state_dict(torch.load(curr_model_large_path, weights_only= False))
-curr_model_large.to("cuda")
+curr_model_large.to("cpu")
 # curr_model_small = load_model(os.path.dirname(os.path.realpath(__file__))+ "/trained_models_small/model_test.pth")
 
 def predict(input):
