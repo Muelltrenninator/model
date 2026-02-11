@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 from torchvision import models
 from Subset import TransformedSubset
 
-from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
+
 train_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
