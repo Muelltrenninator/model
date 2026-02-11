@@ -59,9 +59,9 @@ def get_current_versions():
 
 
 
-def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neural_network, num_epochs : int, loss_fn , optimizer ) -> neural_network:
+def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neural_network, loss_fn , optimizer ) -> neural_network:
     """
-    Trains the given model.
+    Trains the given model, until val loss doesn't shrink anymore
 
     Parameters
     ----------
@@ -100,7 +100,7 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neu
     epoch = 0
     #for epoch in range(num_epochs):
     while(True):
-        
+        model.train()
 # --- Training Phase --- #
         train_loss = 0.0
         train_correct = 0
@@ -113,7 +113,7 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neu
             inputs = inputs.to(device)
             labels = labels.to(device)
 
-            outputs = model(inputs)
+            outputs = model(inputs).to(device)
 
             loss    = loss_fn(outputs, labels)
             loss.backward()
@@ -123,7 +123,8 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neu
             train_loss += loss.item() * labels.size(0)
             train_total += labels.size(0)
             train_correct += predicted_train.eq(labels).sum().item() # comparison sums up true values transform 1d tensor to number with item()
-            writer.add_image("Examples train", inputs[0])
+            if(i == 0):
+                writer.add_image("Examples train", inputs[0])
 
 
 
@@ -148,7 +149,8 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neu
                 val_loss += loss.item() * labels.size(0)
                 val_total += labels.size(0)
                 val_correct += predicted_val.eq(labels).sum().item()
-                writer.add_image("Examples val", inputs[0])
+                if(i == 0):
+                    writer.add_image("Examples val", inputs[0])
 
         print(f"[+] epoch_train_loss: {train_loss/ train_total:.4f} epoch_train_acc : {100. * train_correct/ train_total:.4f}")
         print(f"[+] epoch_val_loss: {val_loss/ val_total:.4f} epoch_val_acc : {100. * val_correct/ val_total:.4}")

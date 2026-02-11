@@ -15,9 +15,11 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, Dataset
 from model_architecture import neural_network
 from model_functions import train_model, save_model, load_model, calculate_class_weights
-from model_transfer import model_pt
-from argparse import ArgumentParser, Namespace
+from sklearn.model_selection import train_test_split
+from torchvision import models
+from Subset import TransformedSubset
 
+from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 train_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -36,53 +38,64 @@ val_transforms = transforms.Compose([
     ])
 
 
+
 def main():
+    device       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
+    img_dir_large = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying/"
+    base_data    = datasets.ImageFolder(root = img_dir_large, transform = None, allow_empty = True)
+    indices = list(range(len(base_data)))
+    train_idx, val_idx = train_test_split(indices, test_size = 0.3, train_size = 0.7, shuffle = True )
+
 
     model = None
 
     match sys.argv[1]:
         case "vit":
             pass
-        
         case "pt":
-            model = model_pt
+            model = models.resnet50(weights = "ResNet50_Weights.DEFAULT")
+            for param in model.parameters():
+                param.requires_grad = False
+
+            for param in model.fc.parameters():
+                param.require_grad = True
+
+            model.fc = nn.Sequential(
+                nn.Linear(model.fc.in_features, 512),
+                nn.ReLU(inplace=True),
+                nn.Dropout(p=0.3),
+                nn.Linear(512, 5)
+)
         
         case "test":
             model = neural_network(5)
         case _:
             print("supply a valid param [vit, pt, test]")
 
-    img_dir_large = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying/"
+    train_dataset = TransformedSubset(base_data, train_idx, train_transforms)
+    val_dataset = TransformedSubset(base_data, val_idx, val_transforms)
     
-    optimizer     = optim.Adam(model.parameters(), lr = 0.001)
-
-    data_large    = datasets.ImageFolder(root = img_dir_large, transform = train_transforms , allow_empty = True)
-    train_data_large, val_data_large = torch.utils.data.random_split(data_large, [0.7, 0.3], generator =  torch.Generator().manual_seed(42))
-    train_data_large.transform = train_transforms
-    val_data_large.tranfsorm = val_transforms
-
-    train_loader_large  = DataLoader(dataset = train_data_large, batch_size = 32, shuffle = True)
-    val_loader_large = DataLoader(dataset = val_data_large, batch_size = 32, shuffle = False)
-    device       = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
-    model.to(device)
-
-    criterion     = nn.CrossEntropyLoss()
 
 
-    print(str(train_loader_large))
+
+    train_loader  = DataLoader(dataset = train_dataset, batch_size = 64, shuffle = True, num_workers= 8, pin_memory= True)
+    val_loader = DataLoader(dataset = val_dataset, batch_size = 64, shuffle = False, num_workers= 8, pin_memory= True)
+
+
+
+    weights = calculate_class_weights(train_loader)
+    criterion     = nn.CrossEntropyLoss(weight = torch.FloatTensor(weights).to(device), label_smoothing = 0.1)
+
+    print(str(train_loader))
+
+    
     print(device)
 
-    val_loader_large = DataLoader(dataset = train_data_large, batch_size = 32, shuffle = False)
-    weights = calculate_class_weights(train_loader_large)
-    train_model(train_loader = train_loader_large, val_loader = val_loader_large,  model = model, num_epochs = 3,loss_fn = criterion, optimizer = optimizer)
-    criterion     = nn.CrossEntropyLoss(weight = torch.FloatTensor(weights))
-    
-
-    save_model(model, os.path.dirname(os.path.realpath(__file__)) +"/trained_models_large/model_transfer_3.pth")
-
-
-
+    model.to(device)
+    optimizer     = optim.Adam(model.parameters(), lr = 0.001)
+    train_model(train_loader = train_loader, val_loader = val_loader,  model = model, loss_fn = criterion, optimizer = optimizer)
+    save_model(model, os.path.dirname(os.path.realpath(__file__)) +"/trained_models_large/model_transfer_newest.pth")
 
 
 if __name__ == "__main__":
