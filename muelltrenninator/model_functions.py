@@ -162,7 +162,7 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : neu
         writer.add_scalar("Accuracy / train", train_correct / train_total, epoch)
         epoch += 1
 
-        if val_loss < best_val_loss - min_improve: # Early Stopping
+        if val_loss < best_val_loss + min_improve: # Early Stopping
             best_val_loss = val_loss
             epochs_no_improve = 0
     
