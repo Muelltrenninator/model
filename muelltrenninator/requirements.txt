@@ -4,3 +4,5 @@ matplotlib>=3.4.0
 gradio>=6.0.2
 scikit-learn>=1.7.2
 tensorboard>=2.20.0
+torchmetrics>=1.7.2
+split-folders>=0.6.1

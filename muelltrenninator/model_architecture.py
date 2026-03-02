@@ -66,3 +66,4 @@ class neural_network(nn.Module):
         features = self.layers_analyze(input_tensor)
         output = self.layers_combine(features)
         return output
+

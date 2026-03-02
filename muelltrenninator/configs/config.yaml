@@ -1,0 +1,21 @@
+
+
+training:
+
+seed : 42
+train_ratio : 0.7
+val_ratio : 0.15
+test_ratio : 0.15
+split_dir : "/splitted_data/"
+learning_rate : 0.001
+batch_size : 64
+num_workers : 8
+device : "cuda"
+
+
+data:
+
+  request_key : 
+temp_dir : "/data_large_classifying/"
+input_size : (224*224)
+

@@ -7,12 +7,14 @@ import torch.nn as nn
 from torchvision import datasets, transforms, models
 from model_architecture import neural_network
 from trash_classifier import trash_pre_detector
-from model_functions import load_model, evalute_input
+from evaluation import evalute_input
 
 curr_model_large_path = os.path.dirname(os.path.realpath(__file__))+ "/trained_models_large/model_transfer_newest.pth"
-curr_model_large = models.resnet50(pretrained = True)
+
+curr_model_large = models.resnet50(weights = "ResNet50_Weights.DEFAULT")
 for param in curr_model_large.parameters():
     param.requires_grad = False
+
 curr_model_large.fc = nn.Sequential(
                 nn.Linear(curr_model_large.fc.in_features, 512),
                 nn.ReLU(inplace=True),
