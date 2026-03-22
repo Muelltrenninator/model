@@ -7,10 +7,8 @@ import PIL.Image as Image
 import numpy as np
 
 from torchvision import datasets, transforms
-from model_architecture import neural_network
 from torchvision import models
 from torchvision import datasets, transforms
-from trash_classifier import trash_pre_detector
 from collections import OrderedDict
 from utils import get_classes
 from configs.load_configs import configs
@@ -25,7 +23,7 @@ val_transform = transforms.Compose([
     )
     ])
 
-device = configs["device"]
+device = configs["device_eval"]
 
 
 

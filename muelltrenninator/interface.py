@@ -5,23 +5,16 @@ import torchvision
 import torch.nn as nn
 
 from torchvision import datasets, transforms, models
-from model_architecture import neural_network
-from trash_classifier import trash_pre_detector
 from evaluation import evalute_input
+from configs.load_configs import configs
+from models.registry import MODEL_REGISTRY
+import models.model_architectures
 
-curr_model_large_path = os.path.dirname(os.path.realpath(__file__))+ "/trained_models_large/model_transfer_newest.pth"
+curr_model_large_path = os.path.dirname(os.path.realpath(__file__))+ "/trained_models_large/model_transfer_current.pth"
 
-curr_model_large = models.resnet50(weights = "ResNet50_Weights.DEFAULT")
-for param in curr_model_large.parameters():
-    param.requires_grad = False
+curr_model_large = MODEL_REGISTRY["ResNet50.DEFAULT"](5)
 
-curr_model_large.fc = nn.Sequential(
-                nn.Linear(curr_model_large.fc.in_features, 512),
-                nn.ReLU(inplace=True),
-                nn.Dropout(p=0.3),
-                nn.Linear(512, 5)
-)
-curr_model_large.load_state_dict(torch.load(curr_model_large_path, weights_only= False))
+curr_model_large.load_state_dict(torch.load(curr_model_large_path, weights_only= False, map_location= torch.device(configs["device_eval"])))
 curr_model_large.to("cpu")
 # curr_model_small = load_model(os.path.dirname(os.path.realpath(__file__))+ "/trained_models_small/model_test.pth")
 

@@ -7,9 +7,7 @@ from collections import Counter
 from sklearn.utils import compute_class_weight
 
 
-
-
-def calculate_class_weights(dataloader : DataLoader):
+def calculate_class_weights(dataloader : DataLoader) -> list:
     """
     Calculates the weight of the classes inside the train Dataloader
 
@@ -25,7 +23,6 @@ def calculate_class_weights(dataloader : DataLoader):
 
     """
 
-    
     counter = Counter()
     y = []
     for _, labels in dataloader:
@@ -34,7 +31,6 @@ def calculate_class_weights(dataloader : DataLoader):
     for class_label, count in counter.items():
         y.extend([class_label] * count)
     print(counter)
-    print(y)
     class_weights = compute_class_weight(class_weight = "balanced", classes = np.unique(y), y = y)
     print(f"Class Weights: {class_weights}")
 
@@ -46,7 +42,7 @@ def get_current_versions():
     pass    # Optional
 
 
-def get_classes(data_dir : str):
+def get_classes(data_dir : str) -> list:
     """
     Gets all the available folder inside the data_dir
 

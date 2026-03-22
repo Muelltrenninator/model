@@ -13,7 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.classification import MulticlassConfusionMatrix
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
 from sklearn.utils.class_weight import compute_class_weight
 from utils import get_classes
 from torchmetrics.classification import MulticlassConfusionMatrix
@@ -21,10 +21,11 @@ from configs.load_configs import configs
 from torch.backends import cudnn
 
 data_dir = os.path.dirname(os.path.realpath(__file__)) + configs["temp_dir"]
-device       = configs["device"]
+device       = configs["device_train"]
 if (device == "cuda"):
     cudnn.benchmark = True
     print(f"[+] cudnn benchmark status: {cudnn.benchmark}")
+
 
 def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss_fn , optimizer, test_loader = None ):
     """
@@ -32,8 +33,8 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss
 
     Parameters
     ----------
-    dataloader : DataLoader
-        The Dataloader object that should be used for parsing and formatting the training data
+    train_loader : DataLoader
+        The DataLoader object that should be used for parsing the training data
     
     val_loader : DataLoader
         The DataLoader object that should be used for parsing the evaluation data.
@@ -47,13 +48,21 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss
     optimizer :
         The optimizer used during training
     
-
+    test_loader : DataLoader, optional
+        The DataLoader object that should be used for parsing the test data 
+    
 
     Returns
     -------
 
     model
         the trained model
+    
+    test_loss / test_total
+        the loss of the trained model
+    
+    test_correct / test_total
+        the accuracy of the trained model
     """
     classes = get_classes(data_dir= data_dir)
     
@@ -65,8 +74,8 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss
     best_val_loss     = float("inf")
     min_improve       = 1e-3
 
-    confusion_matrix = MulticlassConfusionMatrix(len(classes)).to(device)
-
+    test_confusion_matrix = MulticlassConfusionMatrix(len(classes)).to(device)
+    val_confusion_matrix  = MulticlassConfusionMatrix(len(classes)).to(device)
     model.train()
     epoch = 0
     #for i in range(2):
@@ -100,27 +109,26 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss
 
 # --- Validation Phase --- #
         model.eval()
-        val_loss = 0
+        val_loss = 0.0
         val_correct = 0
         val_total = 0
         
         with torch.no_grad():
 
             for i, data in enumerate(val_loader, 0 ):
+
                 inputs, labels = data
                 inputs = inputs.to(device)
                 labels = labels.to(device)
                 outputs = model(inputs)
                 
-                
-                prediction = torch.argmax(input = outputs, dim = 1)
-
+                prediction_val     = torch.argmax(input = outputs, dim = 1)
                 loss = loss_fn(outputs, labels)
-                confusion_matrix.update(prediction, labels)
                 _, predicted_val = outputs.max(1)
                 val_loss += loss.item() * labels.size(0)
                 val_total += labels.size(0)
                 val_correct += predicted_val.eq(labels).sum().item()
+                val_confusion_matrix.update(prediction_val, labels)
                 if(i == 0):
                     writer.add_image("Examples val", inputs[0])
 
@@ -130,9 +138,10 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss
         writer.add_scalar("Accuracy / val", val_correct / val_total, epoch)
 
         
-        writer.add_scalar("Loss / train", train_loss/ train_total, epoch)
+        writer.add_scalar("Loss / train", train_loss / train_total, epoch)
         writer.add_scalar("Accuracy / train", train_correct / train_total, epoch)
         epoch += 1
+
 
         if (val_loss < best_val_loss + min_improve): # Early Stopping
             best_val_loss = val_loss
@@ -142,17 +151,48 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model, loss
             epochs_no_improve += 1
     
         if (epochs_no_improve >= patience):
-            fig, ax = confusion_matrix.plot(labels = classes)
-            writer.add_figure("Confusion Matrix", fig)
 
+            model.eval()
+            test_loss    = 0.0
+            test_total   = 0
+            test_correct = 0
+            y_true = []
+            y_pred = []
+            for i, data in enumerate(test_loader, 0):
+                inputs, labels = data
+                y_true.append(labels)
+                inputs  = inputs.to(device)
+                labels  = labels.to(device)
+                outputs = model(inputs)
 
-            # TODO implement confusion matrix
+                prediction_test = torch.argmax(input = outputs, dim = 1)
+                y_pred.append(prediction_test)
+                loss            = loss_fn(outputs, labels)
+                _, predicted_test = outputs.max(1)
+                test_loss += loss.item() * labels.size(0)
+                test_total += labels.size(0)
+                test_correct += predicted_test.eq(labels).sum().item()
+                test_confusion_matrix.update(prediction_test, labels)
+                if(i == 0):
+                    writer.add_image("Example test", inputs[0])
+            
+            y_true = torch.cat(y_true).cpu().numpy()
+            y_pred = torch.cat(y_pred).cpu().numpy()
+            score = f1_score(y_true = y_true, y_pred = y_pred, average = "macro")
+            print(f"[+] test_loss: {test_loss/ test_total:.4f} test_acc : {100. * test_correct/ test_total:.4f}")
+            test_fig, test_ax = test_confusion_matrix.plot(labels = classes)
+            val_fig, vaL_ax = val_confusion_matrix.plot(labels = classes)
+            writer.add_figure("test Confusion Matrix", test_fig)
+            writer.add_figure("val Confusion Matrix", val_fig)
+            writer.add_scalar("Loss / test", test_loss / test_total)
+            writer.add_scalar("Accuracy / test", test_correct / test_total)
+
             print("[+] Finished Training")
             writer.flush()
             print(f"[+] Created tensorboard summary at {SummaryWriter.get_logdir(writer)}")
             writer.close()
-            return model
-        
+
+            return model, test_loss / test_total, test_correct / test_total, score
 
 
 def save_model(model : neural_network, model_path : str):
