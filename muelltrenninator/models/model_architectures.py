@@ -7,15 +7,16 @@ import torch.optim as optim
 from models.registry import register_model, MODEL_REGISTRY
 from models.model_template import model_template
 from torchvision import models
-
+"""
 @register_model(model_name = "test_nn")
 class neural_network(model_template):
     
     def __init__(self, num_final_output = 5):
         super().__init__()
-    
+        self.learning_rate = 0.0001
+
         self.layers_analyze = nn.Sequential(
-        
+            
             # Layer 1
             nn.Conv2d(in_channels = 3, out_channels = 32, kernel_size = 3, stride = 1, padding = 1),
             nn.BatchNorm2d(32),
@@ -57,23 +58,26 @@ class neural_network(model_template):
         features = self.layers_analyze(input_tensor)
         output = self.layers_combine(features)
         return output
-
+"""
 
 @register_model(model_name = "ResNet50.DEFAULT")
 class resnet50(model_template):
     
+    
     def __init__(self, num_final_output = 5):
         super().__init__()
+
+        self.learning_rate = 0.0001
         self.model = models.resnet50(weights = "ResNet50_Weights.DEFAULT")
 
         for param in self.model.parameters():
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 512),
+            nn.Linear(self.model.fc.in_features, 64),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(512, num_final_output)
+            nn.Linear(64, num_final_output)
 )
 
         for param in self.model.fc.parameters():
@@ -89,16 +93,17 @@ class resnet34(model_template):
 
     def __init__(self, num_final_output = 5):
         super().__init__()
+        self.learning_rate = 0.0001
         self.model = models.resnet34(weights = "ResNet34_Weights.DEFAULT")
 
         for param in self.model.parameters():
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 512),
+            nn.Linear(self.model.fc.in_features, 64),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(512, num_final_output)
+            nn.Linear(64, num_final_output)
 )
 
         for param in self.model.fc.parameters():
@@ -112,18 +117,20 @@ class resnet34(model_template):
 @register_model(model_name = "ResNet18.DEFAULT")
 class resnet18(model_template):
 
+
     def __init__(self, num_final_output = 5):
         super().__init__()
+        self. learning_rate = 0.0001
         self.model = models.resnet18(weights = "ResNet18_Weights.DEFAULT")
 
         for param in self.model.parameters():
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 512),
+            nn.Linear(self.model.fc.in_features, 64),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(512, num_final_output)
+            nn.Linear(64, num_final_output)
 )
 
         for param in self.model.fc.parameters():
@@ -133,3 +140,256 @@ class resnet18(model_template):
         output = self.model(x)
         return output
 
+@register_model(model_name = "ResNet50.LAYER4.UNFROZEN")
+class resnet50(model_template):
+
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+        self.model = models.resnet50(weights = "ResNet50_Weights.DEFAULT")
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.fc = nn.Sequential(
+            nn.Linear(self.model.fc.in_features, 64),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.3),
+            nn.Linear(64, num_final_output)
+)
+        for param in self.model.layer4.parameters():
+            param.requires_grad = True
+            
+
+        for param in self.model.fc.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+
+@register_model(model_name = "ResNet34.LAYER4.UNFROZEN")
+class resnet34(model_template):
+
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+        self.model = models.resnet34(weights = "ResNet34_Weights.DEFAULT")
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.fc = nn.Sequential(
+            nn.Linear(self.model.fc.in_features, 64),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.3),
+            nn.Linear(64, num_final_output)
+)
+
+        for param in self.model.layer4.parameters():
+            param.requires_grad = True
+            
+        for param in self.model.fc.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+
+@register_model(model_name = "ResNet18.LAYER4.UNFROZEN")
+class resnet18(model_template):
+
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+        self.model = models.resnet18(weights = "ResNet18_Weights.DEFAULT")
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.fc = nn.Sequential(
+            nn.Linear(self.model.fc.in_features, 64),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.3),
+            nn.Linear(64, num_final_output)
+)
+
+        for param in self.model.layer4.parameters():
+            param.requires_grad = True
+
+        for param in self.model.fc.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+"""
+@register_model(model_name = "EfficientNet_B0.UNFROZEN")
+class efficientnet_b0(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+
+        self.model = models.efficientnet_b0(weights = "EfficientNet_B0_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.features[-1].parameters():
+            param.requires_grad = True
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+@register_model(model_name = "EfficientNet_B1.UNFROZEN")
+class efficientnet_b1(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+
+        self.model = models.efficientnet_b1(weights = "EfficientNet_B1_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.features[-1].parameters():
+            param.requires_grad = True
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+
+@register_model(model_name = "EfficientNet_B2.UNFROZEN")
+class efficientnet_b2(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+
+        self.model = models.efficientnet_b2(weights = "EfficientNet_B2_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.features[-1].parameters():
+            param.requires_grad = True
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+@register_model(model_name = "EfficientNet_B3.UNFROZEN")
+class efficientnet_b3(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.00001
+
+        self.model = models.efficientnet_b3(weights = "EfficientNet_B3_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.features[-1].parameters():
+            param.requires_grad = True
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+"""
+
+@register_model(model_name = "EfficientNet_B0.DEFAULT")
+class efficientnet_b0(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.0001
+
+        self.model = models.efficientnet_b0(weights = "EfficientNet_B0_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+@register_model(model_name = "EfficientNet_B1.DEFAULT")
+class efficientnet_b1(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.0001
+
+        self.model = models.efficientnet_b1(weights = "EfficientNet_B1_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+
+@register_model(model_name = "EfficientNet_B2.DEFAULT")
+class efficientnet_b2(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.0001
+
+        self.model = models.efficientnet_b2(weights = "EfficientNet_B2_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output
+
+@register_model(model_name = "EfficientNet_B3.DEFAULT")
+class efficientnet_b3(model_template):
+    def __init__(self, num_final_output = 5):
+        super().__init__()
+        self.learning_rate = 0.0001
+
+        self.model = models.efficientnet_b3(weights = "EfficientNet_B3_Weights.DEFAULT")
+        self.model.classifier[1] = nn.Linear(self.model.classifier[1].in_features, num_final_output)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        for param in self.model.classifier.parameters():
+            param.requires_grad = True
+    
+    def forward(self, x):
+        output = self.model(x)
+        return output

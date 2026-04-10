@@ -6,9 +6,7 @@ import torch.nn.functional as F
 import PIL.Image as Image
 import numpy as np
 
-from torchvision import datasets, transforms
-from torchvision import models
-from torchvision import datasets, transforms
+from torchvision import transforms
 from collections import OrderedDict
 from utils import get_classes
 from configs.load_configs import configs
@@ -51,7 +49,7 @@ def evalute_input(model : neural_network, image_path : str, data_dir : str = Non
     JSON string
         A class : probability dictionary sorted descending by probability the last item is a bool value based on the model_small
     """
-    data_dir = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying/"
+    data_dir = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying_raw/images"
     classes = get_classes(data_dir)
 
     model = model.eval()
@@ -63,14 +61,11 @@ def evalute_input(model : neural_network, image_path : str, data_dir : str = Non
         model_small = model_small.eval()
         output_small = model_small(image.to(device))
         _, predicted_small = output_small.max(1)
-        print(output_small)
 
     output = model(image.to(device))
     output = output.to(device)
-    print(output)
     probabilities = F.softmax(output, dim = 1)[0]
     probabilities = probabilities.to(device)
-    print(probabilities)
 
     class_prob_pairs = {}
 
@@ -78,8 +73,6 @@ def evalute_input(model : neural_network, image_path : str, data_dir : str = Non
         class_prob_pairs[classes[i]] = probabilities[i].item()
 
     sorted_class_prob_pairs = OrderedDict(sorted(class_prob_pairs.items(), key = lambda x: x[1], reverse = True)) # Sort dictionary descending by value
-    print(class_prob_pairs)
-    print(sorted_class_prob_pairs)
 
     if(model_small != None and predicted_small == 1):
         sorted_class_prob_pairs["is_trash"] = False

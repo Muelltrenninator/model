@@ -1,2 +1,0 @@
-from model_architectures import resnet50
-import registry

@@ -1,23 +1,3 @@
-"""
-Ablation Study PDF Generator
-==============================
-Verwendung:
-
-  Option A – Werte direkt als Dictionary übergeben:
-      results = {
-          "Baseline CNN": {"accuracy": 61.2, "macro_f1": 0.54, "infer_ms": 8,  "params_m": 0.4},
-          "ResNet-18":    {"accuracy": 79.4, "macro_f1": 0.76, "infer_ms": 12, "params_m": 11.7},
-      }
-      generate_report(results, best_model="ResNet-18")
-
-  Option B – Im Trainings-Loop befüllen:
-      tracker = AblationTracker()
-      # ... Training Baseline ...
-      tracker.add("Baseline CNN", accuracy=61.2, macro_f1=0.54, infer_ms=8, params_m=0.4)
-      # ... Training ResNet ...
-      tracker.add("ResNet-18", accuracy=79.4, macro_f1=0.76, infer_ms=12, params_m=11.7)
-      tracker.save_pdf("bericht.pdf")
-"""
 
 import io
 import matplotlib
@@ -35,6 +15,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
 
+#TODO improve bar color listing process for diagramms
 # ── COLOR-CODES ─────────────────────────────────────────────────────────────────────
 C_BEST    = "#1D9E75"
 C_NORMAL  = "#378ADD"
@@ -46,49 +27,7 @@ C_HLBG    = "#f0faf6"
 C_HEADBG  = "#f4f4f2"
 
 
-class AblationTracker:
-    """Collects data and creates a report with collected data"""
-
-    def __init__(self):
-        self.results = {}
-        self._order  = []
-
-    def add(self, model_name: str, accuracy: float, f1_score: float, loss: float, params_m: float):
-        """
-        Adds data of a trained model
-
-        Parameters
-        ----------
-        model_name: str
-            name of the model
-
-        accuracy: float
-            test accuracy 
-
-        f1_score: float
-            the calculated F1 Score 
-        
-        loss : float
-            test loss 
-
-        params_m: float
-            the number of parameters in millions
-        """
-        self.results[model_name] = {
-            "accuracy": accuracy,
-            "f1_score": f1_score,
-            "loss"    : loss,
-            "params_m": params_m
-        }
-        if model_name not in self._order:
-            self._order.append(model_name)
-
-    def save_pdf(self):
-
-        ordered = {k: self.results[k] for k in self._order}
-        generate_report(ordered, configs["ablation_study_path"], configs["ablation_study_title"])
-
-def generate_report(results: dict, output_path: str = "ablation_report.pdf", title: str = "Modellvergleich — Ablation Study"):
+def generate_report(results: dict, output_path: str = "/home/julian_hack/Desktop/projects/ablation_report_test.pdf", title: str = "Modellvergleich — Ablation Study"):
     """
     Creates the results pdf based of the results dictionary
 
@@ -128,7 +67,7 @@ def generate_report(results: dict, output_path: str = "ablation_report.pdf", tit
         else:
             bar_colors.append(C_NORMAL)
 
-    chart_buf = _build_charts(model_names, accuracies, f1_scores, losses, bar_colors, title)
+    chart_buf = _build_charts(model_names, accuracies, losses, f1_scores, bar_colors, title)
     _build_pdf(output_path, title, chart_buf, model_names, accuracies, losses, f1_scores, params_m, best_model, bar_colors)
     print(f"[+] Report saved at: {output_path}")
 
@@ -136,7 +75,7 @@ def generate_report(results: dict, output_path: str = "ablation_report.pdf", tit
 
 def _build_charts(model_names : list, accuracies : list, losses : list, f1_scores : list , bar_colors : list , title : str) -> ptr:
     short = [model_name.replace(" + ", "\n+ ") for model_name in model_names]
-
+    short = ""
     fig = plt.figure(figsize=(11, 5.5), facecolor="white")
     gs  = gridspec.GridSpec(1, 3, figure=fig, wspace=0.38, left=0.06, right=0.97, top=0.85, bottom=0.22)
 
@@ -173,7 +112,7 @@ def _build_charts(model_names : list, accuracies : list, losses : list, f1_score
 
     ax2.set_xticks(x)
     ax2.set_xticklabels(short, fontsize=8)
-    ax2.set_ylim(0, 1.12)
+    ax2.set_ylim(0, 2)
     ax2.set_title("Losses", fontsize=10, fontweight="bold", color=C_TEXT, pad=8, loc="left")
     style_ax(ax2, "Loss")
     
@@ -181,13 +120,13 @@ def _build_charts(model_names : list, accuracies : list, losses : list, f1_score
     ax3 = fig.add_subplot(gs[2])
     bars3 = ax3.bar(x, accuracies, color=bar_colors, width=0.55, zorder=3, linewidth=0)
     for bar, val, color in zip(bars3, accuracies, bar_colors):
-        ax3.text(bar.get_x() + bar.get_width()/2, val + 0.012, f"{val * 100:.2f}%", ha="center", va="bottom", fontsize=8.5, fontweight="bold", color=C_BEST if color == C_BEST else C_MUTED)
+        ax3.text(bar.get_x() + bar.get_width()/2, val + 0.012, f"{val:.2f}(%)", ha="center", va="bottom", fontsize=8.5, fontweight="bold", color=C_BEST if color == C_BEST else C_MUTED)
     
     ax3.set_xticks(x)
     ax3.set_xticklabels(short, fontsize=8)
     ax3.set_ylim(0, 115)
     ax3.set_title("Accuracies", fontsize=10, fontweight="bold", color=C_TEXT, pad=8, loc="left")
-    style_ax(ax3, "Accuracy")
+    style_ax(ax3, "Accuracy in %")
     
     patch = mpatches.Patch(color=C_BEST, label="Best Model")
     fig.legend(handles=[patch], loc="upper right", fontsize=8.5, frameon=False, labelcolor=C_TEXT)
@@ -214,16 +153,16 @@ def _build_pdf(output_path, title, chart_buf, model_names, accuracies, losses, f
 
     story = []
     story.append(Paragraph(title, title_style))
-    story.append(Paragraph( f"All models have been trained on the same dataset with the same seed, the datasplit was train: {configs["train_ratio"]} , val: {configs["val_ratio"]} , test: {configs["test_ratio"]}" , sub_style))
+    story.append(Paragraph( f"Alle Architekturen wurden mit ihren jeweiligen idealen Learning-Rates und derselben Datenverteilung trainiert train: {configs["train_ratio"]} , val: {configs["val_ratio"]} , test: {configs["test_ratio"]}" , sub_style))
 
-    # Diagramme
+    # Diiagram
     story.append(Image(chart_buf, width=16.5*cm, height=9*cm))
     story.append(Spacer(1, 0.3*cm))
 
-    # Tabelle
+    # List
     story.append(Paragraph("Detaillierte Ergebnisse", sec_style))
 
-    header = ["Modell", "Top-1 Acc.", "Loss", "F1-Score", "Parameter"]
+    header = ["Modell", "Test-Accuracy", "Test-Loss", "F1-Score", "Parameterzahl"]
     rows   = [header]
     best_row_idx = None
 
@@ -241,7 +180,7 @@ def _build_pdf(output_path, title, chart_buf, model_names, accuracies, losses, f
             f"{params_m[i]:.1f} M"
         ])
         if model_name == best_model:
-            best_row_idx = i + 1  # +1 wegen Header
+            best_row_idx = i + 1  # +1 due to  Header
 
     col_w = [7.5*cm, 2.3*cm, 2.3*cm, 2.2*cm, 2.4*cm]
     tbl   = Table(rows, colWidths=col_w, repeatRows=1)
@@ -263,7 +202,7 @@ def _build_pdf(output_path, title, chart_buf, model_names, accuracies, losses, f
         ("ROWBACKGROUNDS",(0,1), (-1,-1), [colors.white, colors.HexColor(C_STRIPE)]),
     ]
 
-    # Hughlight best column
+    # Highlight best column
     if best_row_idx is not None:
         ts += [
             ("BACKGROUND", (0, best_row_idx), (-1, best_row_idx), 
@@ -278,23 +217,7 @@ def _build_pdf(output_path, title, chart_buf, model_names, accuracies, losses, f
     story.append(tbl)
     story.append(Spacer(1, 0.3*cm))
     story.append(Paragraph(
-        "Due to inequalities between the number of samples in every class the F1-Score is being used to determine the performance of a model"
-        "F1-Score weighs every class equally and therefore prevents class distortion from inequality between classes",
+        "Aufgrund von Klassenungleichheiten wird der F1-Score verwendet um die Performance eines Modells zu vergleichen",
         note_style))
 
     doc.build(story)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# Example Usage
-# ══════════════════════════════════════════════════════════════════════════════
-if __name__ == "__main__":
-
-    results = {
-        "Simples CNN (Baseline)":            {"accuracy": 61.2, "macro_f1": 0.54, "params_m": 0.4},
-        "ResNet-18":                         {"accuracy": 79.4, "macro_f1": 0.76, "params_m": 11.7},
-        "ResNet-18 + Augmentation":          {"accuracy": 84.1, "macro_f1": 0.82, "params_m": 11.7},
-        "ResNet-18 + Aug. + Weighted Loss":  {"accuracy": 87.3, "macro_f1": 0.86, "params_m": 11.7},
-    }
-    generate_report(results, output_path="/mnt/user-data/outputs/ablation_report.pdf")
-

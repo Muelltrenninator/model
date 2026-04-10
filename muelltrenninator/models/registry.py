@@ -1,5 +1,4 @@
 # Global model dictionary
-
 MODEL_REGISTRY = {}
 
 def register_model(model_name):

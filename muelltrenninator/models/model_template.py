@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class model_template(nn.Module):
-
+    
     def forward(self, x): 
         """
         An abstract method, that needs to be overwritten in the subclass
