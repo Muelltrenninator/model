@@ -2,6 +2,7 @@ data_large_classifying_raw/
 data_small_classifying/
 logs/
 splitted_data/
+**/.git
 *.pdf
 train_functions.py
 ablation_report.py
