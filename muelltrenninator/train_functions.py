@@ -9,9 +9,6 @@ import numpy as np
 import datetime
 import matplotlib.pyplot as plt
 
-#from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
-#from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.classification import MulticlassConfusionMatrix
 from torch.utils.data import DataLoader
@@ -132,7 +129,7 @@ def test_model(model, test_loader, loss_fn, test_confusion_matrix, writer):
 
 
 
-def train_model(train_loader : DataLoader, val_loader : DataLoader , model : object, loss_fn : func , optimizer, test_loader : DataLoader) -> list:
+def train_model(train_loader : DataLoader, val_loader : DataLoader , model : object, loss_fn, optimizer, test_loader : DataLoader) -> list:
     """
     Trains the given model, until val loss doesn't shrink anymore
 
