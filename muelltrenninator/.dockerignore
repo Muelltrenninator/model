@@ -1,4 +1,5 @@
-data_large_classifying_raw/
+*.jpg
+*
 data_small_classifying/
 logs/
 splitted_data/

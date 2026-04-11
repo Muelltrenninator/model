@@ -1,13 +1,13 @@
 
-
+classes : ["hazardous", "organic", "paper", "plastic", "residual"]
 
 
 validation:
 
+
 device_eval : "cpu"
 val_model_architecture : "ResNet50.DEFAULT"
 weights_path : "trained_models_large/model_transfer_presentation_ready.pth"
-
 
 
 documentation:

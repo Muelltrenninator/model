@@ -49,34 +49,8 @@ def calculate_class_weights(dataloader : DataLoader) -> list:
     return class_weights
 
 
-
 def get_current_versions():
     pass    # Optional
-
-
-def get_classes(data_dir : str) -> list:
-    """
-    Gets all the available folder inside the data_dir
-
-    Parameters
-    ----------
-    data_dir : str
-        The data directory holding the classes
-    
-    Returns
-    -------
-    classes : list 
-        An alphabeticlly sorted list of classes as strings inside the specified directory. Only folders, files are being ignored
-    
-    """
-    available_classes = []
-    with os.scandir(data_dir) as curr_dir:
-        for i in curr_dir:
-            if(i.is_dir() == True):
-                available_classes.append(i.name)
-
-    return sorted(available_classes, key = str.lower)
-
 
 
 def split_data():
@@ -149,7 +123,7 @@ def load_model(model_name : str, weights_path : str = None) -> object:
     loaded_model : object
         The loaded model for guaranteed object methods consult :py:class:`models.model_template`
     """
-    loaded_model = MODEL_REGISTRY[model_name](len(get_classes(os.path.dirname(os.path.realpath(__file__)) + configs["raw_data_dir"] + "images/")))
+    loaded_model = MODEL_REGISTRY[model_name](len(configs["classes"]))
     if (weights_path != None):
         loaded_model.load_state_dict(torch.load(weights_path, weights_only= False, map_location= torch.device(configs["device_eval"])))
     return loaded_model

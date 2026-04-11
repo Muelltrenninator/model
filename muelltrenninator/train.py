@@ -62,7 +62,6 @@ def train_architecture():
     split_data()
     device       = configs["device_train"]
     data_root = os.path.dirname(os.path.realpath(__file__))
-    classes = get_classes(data_dir = data_root + configs["raw_data_dir"] + "images/")
 
     model = MODEL_REGISTRY[configs["model_architecture"]](5)
 
@@ -92,7 +91,6 @@ def compare_architectures():
     split_data()
     device       = configs["device_train"]
     data_root = os.path.dirname(os.path.realpath(__file__)) + configs["split_dir"] 
-    classes = get_classes(data_dir = data_root + "train/")
 
 
     train_dataset = ImageFolder(root = data_root + "train/", transform= train_transforms, allow_empty = False)
