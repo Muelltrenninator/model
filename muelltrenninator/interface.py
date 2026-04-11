@@ -25,7 +25,7 @@ def track_usage():
     global curr_model_large
     while(True):
         with runtime_lock:
-            if(time.time() - last_runtime >= 10 and curr_model_large != None):
+            if(time.time() - last_runtime >= 1800 and curr_model_large != None):
                 curr_model_large = None
                 gc.collect()
             
@@ -44,7 +44,7 @@ def predict(input):
         last_runtime = time.time()
 
     if(curr_model_large == None):
-        curr_model_large = load_model(configs["model_name"])
+        curr_model_large = load_model(configs["val_model_architecture"])
         curr_model_large.to(configs["device_eval"])
 
     predicted = evalute_input(curr_model_large,input, model_small = None)
