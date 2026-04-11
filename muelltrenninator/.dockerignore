@@ -4,5 +4,4 @@ logs/
 splitted_data/
 **/.git
 *.pdf
-train_functions.py
-ablation_report.py
+
