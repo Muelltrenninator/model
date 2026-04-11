@@ -4,6 +4,7 @@ import requests
 import numpy as np
 import splitfolders
 import torch
+import math
 
 from models.registry import MODEL_REGISTRY
 from configs.load_configs import configs
@@ -82,6 +83,8 @@ def split_data():
     Deletes every old file in the path, gets the data from the raw path and splits it into train, val and test folders with the trash types as subdirectories. 
     """
     full_split_path = os.path.dirname(os.path.realpath(__file__)) + configs["split_dir"]
+    total = configs["train_ratio"] + configs["val_ratio"] + configs["test_ratio"]
+
     if(os.path.exists(full_split_path) == False):
         raise ValueError(f"[ FAILED ] Path does not exist:{full_split_path}")
     
@@ -95,9 +98,9 @@ def split_data():
         except Exception as e:
             print(f"[ FAILED ] {file_path} ({e})")
         
-
-    if(configs["train_ratio"] + configs["val_ratio"] + configs["test_ratio"] != 1):
-        raise ValueError(f"[ FAILED ] Split ratios must add up to one train_ratio:{configs["train_ratio"]} val_ratio:{configs["val_ratio"]} test_ratio:{configs["test_ratio"]}")
+    
+    if not math.isclose(total, 1.0, rel_tol = 1e-9):
+        raise ValueError(f"[ FAILED ] Split ratios must add up to one train_ratio:{configs['train_ratio']} val_ratio:{configs['val_ratio']} test_ratio:{configs['test_ratio']}")
     
     data_dir = os.path.dirname(os.path.realpath(__file__))
     splitfolders.ratio(input = data_dir + configs["raw_data_dir"] + "/images", output = data_dir + configs["split_dir"], seed = configs["seed"], shuffle = True, ratio = (configs["train_ratio"], configs["val_ratio"], configs["test_ratio"]))

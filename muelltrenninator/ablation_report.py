@@ -69,7 +69,7 @@ def generate_report(results: dict, output_path: str = "/home/julian_hack/Desktop
 
     chart_buf = _build_charts(model_names, accuracies, losses, f1_scores, bar_colors, title)
     _build_pdf(output_path, title, chart_buf, model_names, accuracies, losses, f1_scores, params_m, best_model, bar_colors)
-    print(f"[+] Report saved at: {output_path}")
+    print(f"[ OK ] Report saved at: {output_path}")
 
 
 
