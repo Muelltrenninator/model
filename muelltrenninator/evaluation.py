@@ -50,7 +50,7 @@ def evalute_input(model : object, image_path : str, data_dir : str = None, image
         A class : probability dictionary sorted descending by probability the last item is a bool value based on the model_small
     """
     data_dir = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying_raw/images"
-    classes = configs["classes"]
+    classes = get_classes(data_dir = data_dir)
 
     model = model.eval()
     image = Image.open(image_path)

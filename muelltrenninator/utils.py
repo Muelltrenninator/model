@@ -49,8 +49,34 @@ def calculate_class_weights(dataloader : DataLoader) -> list:
     return class_weights
 
 
+
 def get_current_versions():
     pass    # Optional
+
+
+def get_classes(data_dir : str) -> list:
+    """
+    Gets all the available folder inside the data_dir
+
+    Parameters
+    ----------
+    data_dir : str
+        The data directory holding the classes
+    
+    Returns
+    -------
+    classes : list 
+        An alphabeticlly sorted list of classes as strings inside the specified directory. Only folders, files are being ignored
+    
+    """
+    available_classes = []
+    with os.scandir(data_dir) as curr_dir:
+        for i in curr_dir:
+            if(i.is_dir() == True):
+                available_classes.append(i.name)
+
+    return sorted(available_classes, key = str.lower)
+
 
 
 def split_data():

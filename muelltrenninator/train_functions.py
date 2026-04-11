@@ -13,7 +13,6 @@ from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.classification import MulticlassConfusionMatrix
 from torch.utils.data import DataLoader
 from sklearn.metrics import f1_score
-from utils import get_classes
 from configs.load_configs import configs
 from torch.backends import cudnn
 
@@ -170,7 +169,7 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : obj
     f1_score
         the macro f1_score of the trained model in percent.
     """
-    classes = get_classes(data_dir= data_dir)
+    classes = configs["classes"]
     
     timestamp         =  datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_dir           = os.path.dirname(os.path.realpath(__file__)) + "/logs/"
@@ -184,9 +183,7 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : obj
     val_confusion_matrix  = MulticlassConfusionMatrix(len(classes)).to(device)
 
     epoch = 0
-    score = 0
     test_loss = 0.0
-    test_total = 0
 
     
     for epoch in range(configs["num_epochs"]):
