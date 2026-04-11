@@ -24,11 +24,13 @@ train_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.RandomRotation(15),
     transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
-    transforms.RandomVerticalFlip(p = 0.5),
-    transforms.ColorJitter(brightness=0.1, contrast=0.1),
-    transforms.RandomHorizontalFlip(p = 0.5),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomVerticalFlip(p=0.5),
+    transforms.RandomRotation(degrees=15),
+    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+    transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.05),
     transforms.ToTensor(),
-    transforms.Normalize(mean = [0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
 val_transforms = transforms.Compose([
@@ -56,7 +58,7 @@ def main():
 
 
 def train_architecture():
-    fetch_data()
+    #fetch_data()
     split_data()
     device       = configs["device_train"]
     data_root = os.path.dirname(os.path.realpath(__file__))
@@ -82,11 +84,11 @@ def train_architecture():
     model.to(device)
     optimizer     = optim.Adam(model.parameters(), lr = model.learning_rate)
     train_model(train_loader = train_loader, val_loader = val_loader,  model = model, loss_fn = criterion, optimizer = optimizer, test_loader = test_loader)
-    save_model(model, os.path.dirname(os.path.realpath(__file__)) +"/trained_models_large/model_transfer_2026.pth")
+    save_model(model, os.path.dirname(os.path.realpath(__file__)) +"/trained_models_large/model_transfer_presentation_ready.pth")
 
 
 def compare_architectures():
-    fetch_data()
+    #fetch_data()
     split_data()
     device       = configs["device_train"]
     data_root = os.path.dirname(os.path.realpath(__file__)) + configs["split_dir"] 

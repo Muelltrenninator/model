@@ -15,8 +15,12 @@ from models.registry import MODEL_REGISTRY
 from threading import Thread
 from utils import load_model
 
+
+
 curr_model_large = load_model(configs["val_model_architecture"], configs["weights_path"])
+#curr_model_large.model.load_state_dict(torch.load("trained_models_large/model_transfer_newest.pth", weights_only= False, map_location= torch.device(configs["device_eval"])))
 curr_model_large.to(configs["device_eval"])
+
 # curr_model_small = load_model(os.path.dirname(os.path.realpath(__file__))+ "/trained_models_small/model_test.pth")
 last_runtime = time.time()
 runtime_lock = threading.Lock()
@@ -44,7 +48,7 @@ def predict(input):
         last_runtime = time.time()
 
     if(curr_model_large == None):
-        curr_model_large = load_model(configs["val_model_architecture"])
+        curr_model_large = load_model(configs["val_model_architecture"],configs["weights_path"])
         curr_model_large.to(configs["device_eval"])
 
     predicted = evalute_input(curr_model_large,input, model_small = None)

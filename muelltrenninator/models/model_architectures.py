@@ -68,16 +68,16 @@ class resnet50(model_template):
         super().__init__()
 
         self.learning_rate = 0.0001
-        self.model = models.resnet50(weights = "ResNet50_Weights.DEFAULT")
+        self.model = models.resnet50(weights = models.ResNet50_Weights.IMAGENET1K_V1)
 
         for param in self.model.parameters():
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 64),
+            nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(64, num_final_output)
+            nn.Linear(512, num_final_output)
 )
 
         for param in self.model.fc.parameters():
@@ -100,10 +100,10 @@ class resnet34(model_template):
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 64),
+            nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(64, num_final_output)
+            nn.Linear(512, num_final_output)
 )
 
         for param in self.model.fc.parameters():
@@ -127,10 +127,10 @@ class resnet18(model_template):
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 64),
+            nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(64, num_final_output)
+            nn.Linear(512, num_final_output)
 )
 
         for param in self.model.fc.parameters():
@@ -152,11 +152,11 @@ class resnet50(model_template):
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 64),
+            nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(64, num_final_output)
-)
+            nn.Linear(512, num_final_output))
+
         for param in self.model.layer4.parameters():
             param.requires_grad = True
             
@@ -181,10 +181,10 @@ class resnet34(model_template):
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 64),
+            nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(64, num_final_output)
+            nn.Linear(512, num_final_output)
 )
 
         for param in self.model.layer4.parameters():
@@ -210,10 +210,10 @@ class resnet18(model_template):
             param.requires_grad = False
 
         self.model.fc = nn.Sequential(
-            nn.Linear(self.model.fc.in_features, 64),
+            nn.Linear(self.model.fc.in_features, 512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.3),
-            nn.Linear(64, num_final_output)
+            nn.Linear(512, num_final_output)
 )
 
         for param in self.model.layer4.parameters():

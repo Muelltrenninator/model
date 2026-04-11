@@ -5,8 +5,8 @@
 validation:
 
 device_eval : "cpu"
-val_model_architecture : "ResNet50.LAYER4.UNFROZEN"
-weights_path : "trained_models_large/model_transfer_2026.pth"
+val_model_architecture : "ResNet50.DEFAULT"
+weights_path : "trained_models_large/model_transfer_presentation_ready.pth"
 
 
 
@@ -26,18 +26,17 @@ min_improve : 1e-3
 patience : 7
 compare : False
 seed : 42
-num_epochs : 20
+num_epochs : 50
 train_ratio : 0.7
 val_ratio : 0.15
 test_ratio : 0.15
 split_dir : "/splitted_data/"
-batch_size : 64
+batch_size : 32
 num_workers : 8
 device_train : "cuda"
-model_architecture : "ResNet50.LAYER4.UNFROZEN"
+model_architecture : "ResNet50.DEFAULT"
 
 data:
-
 raw_data_dir : "/data_large_classifying_raw/"
 input_size : (224*224)
 

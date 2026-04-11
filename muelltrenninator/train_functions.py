@@ -193,7 +193,8 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : obj
     test_total = 0
 
     
-    for epoch in range(configs["num_epochs"]):
+    #for epoch in range(configs["num_epochs"]):
+    while(True):
         model.train()
 
 # --- Training Phase --- #
