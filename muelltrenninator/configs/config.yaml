@@ -1,7 +1,4 @@
 
-classes : ["hazardous", "organic", "paper", "plastic", "residual"]
-
-
 validation:
 
 

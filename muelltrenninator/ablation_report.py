@@ -73,7 +73,7 @@ def generate_report(results: dict, output_path: str = "/home/julian_hack/Desktop
 
 
 
-def _build_charts(model_names : list, accuracies : list, losses : list, f1_scores : list , bar_colors : list , title : str) -> ptr:
+def _build_charts(model_names : list, accuracies : list, losses : list, f1_scores : list , bar_colors : list , title : str):
     short = [model_name.replace(" + ", "\n+ ") for model_name in model_names]
     short = ""
     fig = plt.figure(figsize=(11, 5.5), facecolor="white")

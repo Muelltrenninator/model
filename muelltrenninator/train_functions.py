@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import f1_score
 from configs.load_configs import configs
 from torch.backends import cudnn
+from utils import get_classes
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
@@ -169,7 +170,8 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : obj
     f1_score
         the macro f1_score of the trained model in percent.
     """
-    classes = configs["classes"]
+    data_dir = os.path.dirname(os.path.realpath(__file__)) + "/data_large_classifying_raw/images"
+    classes = get_classes(data_dir)
     
     timestamp         =  datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_dir           = os.path.dirname(os.path.realpath(__file__)) + "/logs/"
