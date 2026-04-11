@@ -97,7 +97,7 @@ def split_data():
         
 
     if(configs["train_ratio"] + configs["val_ratio"] + configs["test_ratio"] != 1):
-        raise ValueError(f"[ FAILED ] Split ratios must add up to one train_ratio:{configs["train_ratio"]} val_ratio:{val_ratio} test_ratio:{test_ratio}")
+        raise ValueError(f"[ FAILED ] Split ratios must add up to one train_ratio:{configs["train_ratio"]} val_ratio:{configs["val_ratio"]} test_ratio:{configs["test_ratio"]}")
     
     data_dir = os.path.dirname(os.path.realpath(__file__))
     splitfolders.ratio(input = data_dir + configs["raw_data_dir"] + "/images", output = data_dir + configs["split_dir"], seed = configs["seed"], shuffle = True, ratio = (configs["train_ratio"], configs["val_ratio"], configs["test_ratio"]))
