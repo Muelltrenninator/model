@@ -149,7 +149,7 @@ def load_model(model_name : str, weights_path : str = None) -> object:
     loaded_model : object
         The loaded model for guaranteed object methods consult :py:class:`models.model_template`
     """
-    loaded_model = MODEL_REGISTRY[model_name](len(configs["classes"]))
+    loaded_model = MODEL_REGISTRY[model_name](5)
     if (weights_path != None):
         loaded_model.load_state_dict(torch.load(weights_path, weights_only= False, map_location= torch.device(configs["device_eval"])))
     return loaded_model
