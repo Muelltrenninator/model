@@ -27,7 +27,7 @@ device = configs["device_eval"]
 
 
 
-def evalute_input(model : neural_network, image_path : str, data_dir : str = None, image_transforms : transforms = val_transform, model_small : trash_pre_detector = None) -> dict:
+def evalute_input(model : object, image_path : str, data_dir : str = None, image_transforms : transforms = val_transform, model_small : object = None) -> dict:
     """
     Passes the image to the model
 
