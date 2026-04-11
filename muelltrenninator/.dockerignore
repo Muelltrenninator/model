@@ -1,7 +1,8 @@
+data_large_classifying_raw/**/*.*
+data_small_classifying/**/*.*
 logs/
 splitted_data/
 **/.git
 *.pdf
 *.jpg
 *.png
-
