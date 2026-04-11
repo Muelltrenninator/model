@@ -10,6 +10,7 @@ from models.registry import MODEL_REGISTRY
 from configs.load_configs import configs
 from collections import Counter
 from sklearn.utils import compute_class_weight
+from torch.utils.data import DataLoader
 from zipfile import ZipFile
 from send2trash import send2trash
 from dotenv import load_dotenv, find_dotenv

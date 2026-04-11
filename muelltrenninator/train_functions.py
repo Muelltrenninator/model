@@ -14,9 +14,8 @@ import matplotlib.pyplot as plt
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.classification import MulticlassConfusionMatrix
-from torch.utils.data import DataLoader, ConcatDataset, Subset
+from torch.utils.data import DataLoader
 from sklearn.metrics import f1_score
-from sklearn.model_selection import KFold
 from utils import get_classes
 from configs.load_configs import configs
 from torch.backends import cudnn
@@ -193,8 +192,7 @@ def train_model(train_loader : DataLoader, val_loader : DataLoader , model : obj
     test_total = 0
 
     
-    #for epoch in range(configs["num_epochs"]):
-    while(True):
+    for epoch in range(configs["num_epochs"]):
         model.train()
 
 # --- Training Phase --- #
